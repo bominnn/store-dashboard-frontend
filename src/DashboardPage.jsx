@@ -1,6 +1,10 @@
 import "./DashboardPage.css";
+import { useEffect, useState } from "react";
 
-function DashboardPage({ onLogout, data }) {
+function DashboardPage({ onLogout }) {
+  // 🔥 발주 추천 데이터 (API)
+  const [orderList, setOrderList] = useState([]);
+
   const inventoryList = [
     { name: "삼각김밥", stock: 4, status: "부족" },
     { name: "생수 500ml", stock: 7, status: "주의" },
@@ -14,7 +18,19 @@ function DashboardPage({ onLogout, data }) {
     { name: "도시락", forecast: "점심 전 발주 추천" },
   ];
 
-  const orderList = data || [];
+  // 🔥 API 호출 (토큰 포함)
+  useEffect(() => {
+    fetch("http://localhost:8080/api/recommendations", {
+      headers: {
+        Authorization: sessionStorage.getItem("basic_token"),
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setOrderList(data);
+      })
+      .catch((err) => console.error("API 에러:", err));
+  }, []);
 
   return (
     <div className="dashboard-layout">
@@ -130,11 +146,12 @@ function DashboardPage({ onLogout, data }) {
               {orderList.length === 0 ? (
                 <p>데이터 불러오는 중...</p>
               ) : (
-                orderList.map((item, index) => (
-                  <li key={index}>
+                orderList.map((item) => (
+                  <li key={item.product_id}>
                     <div>
-                      <strong>{item.productName}</strong>
-                      <p>추천 수량: {item.recommendQuantity}</p>
+                      {/* 🔥 여기 백엔드 필드 맞춰야 함 */}
+                      <strong>{item.product_name}</strong>
+                      <p>추천 수량: {item.recommend_qty}</p>
                     </div>
                     <button className="mini-button">확인</button>
                   </li>
