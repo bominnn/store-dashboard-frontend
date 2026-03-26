@@ -1,6 +1,10 @@
 import "./DashboardPage.css";
+import { useEffect, useState } from "react";
 
 function DashboardPage({ onLogout }) {
+  // 🔥 발주 추천 데이터 (API)
+  const [orderList, setOrderList] = useState([]);
+
   const inventoryList = [
     { name: "삼각김밥", stock: 4, status: "부족" },
     { name: "생수 500ml", stock: 7, status: "주의" },
@@ -14,11 +18,19 @@ function DashboardPage({ onLogout }) {
     { name: "도시락", forecast: "점심 전 발주 추천" },
   ];
 
-  const orderList = [
-    { name: "삼각김밥", reason: "현재 재고 부족" },
-    { name: "도시락", reason: "점심 시간 품절 위험" },
-    { name: "콜라 355ml", reason: "기온 상승으로 수요 증가" },
-  ];
+  // 🔥 API 호출 (토큰 포함)
+  useEffect(() => {
+    fetch("http://localhost:8080/api/recommendations", {
+      headers: {
+        Authorization: sessionStorage.getItem("basic_token"),
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setOrderList(data);
+      })
+      .catch((err) => console.error("API 에러:", err));
+  }, []);
 
   return (
     <div className="dashboard-layout">
@@ -71,12 +83,13 @@ function DashboardPage({ onLogout }) {
 
           <div className="summary-card">
             <span className="card-label">발주 추천</span>
-            <strong>3건</strong>
+            <strong>{orderList.length}건</strong>
             <p>예측 기반 추천</p>
           </div>
         </section>
 
         <section className="content-grid">
+          {/* 재고 */}
           <div className="panel">
             <div className="panel-header">
               <h2>재고 현황</h2>
@@ -94,8 +107,8 @@ function DashboardPage({ onLogout }) {
                       item.status === "부족"
                         ? "danger"
                         : item.status === "주의"
-                        ? "warn"
-                        : "normal"
+                          ? "warn"
+                          : "normal"
                     }`}
                   >
                     {item.status}
@@ -105,6 +118,7 @@ function DashboardPage({ onLogout }) {
             </ul>
           </div>
 
+          {/* 수요 예측 */}
           <div className="panel">
             <div className="panel-header">
               <h2>수요 예측</h2>
@@ -122,21 +136,27 @@ function DashboardPage({ onLogout }) {
             </ul>
           </div>
 
+          {/* 🔥 발주 추천 (API 연결됨) */}
           <div className="panel full-width">
             <div className="panel-header">
               <h2>발주 추천</h2>
               <span>Order Recommendation</span>
             </div>
             <ul className="item-list">
-              {orderList.map((item) => (
-                <li key={item.name}>
-                  <div>
-                    <strong>{item.name}</strong>
-                    <p>{item.reason}</p>
-                  </div>
-                  <button className="mini-button">확인</button>
-                </li>
-              ))}
+              {orderList.length === 0 ? (
+                <p>데이터 불러오는 중...</p>
+              ) : (
+                orderList.map((item) => (
+                  <li key={item.product_id}>
+                    <div>
+                      {/* 🔥 여기 백엔드 필드 맞춰야 함 */}
+                      <strong>{item.product_name}</strong>
+                      <p>추천 수량: {item.recommend_qty}</p>
+                    </div>
+                    <button className="mini-button">확인</button>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
         </section>
