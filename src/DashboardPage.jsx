@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "./DashboardPage.css";
 import {
   Chart as ChartJs,
@@ -24,6 +25,8 @@ ChartJs.register(
 );
 
 function DashboardPage({ onLogout }) {
+  const [activePage, setActivePage] = useState("dashboard");
+
   const inventoryList = [
     { name: "콜라", stock: 45, target: 20 },
     { name: "사이다", stock: 30, target: 20 },
@@ -56,7 +59,7 @@ function DashboardPage({ onLogout }) {
       name: "제육볶음 도시락",
       current: 4,
       recommended: 10,
-      reason: "오늘 AI IT학생들 어착 수요 20% 증가 예정",
+      reason: "오늘 IT학생들 어착 수요 20% 증가 예정",
     },
   ];
 
@@ -118,10 +121,7 @@ function DashboardPage({ onLogout }) {
       },
     },
     scales: {
-      y: {
-        beginAtZero: true,
-        grid: { color: "#f1f5f9" },
-      },
+      y: { beginAtZero: true, grid: { color: "#f1f5f9" } },
       x: { grid: { display: false } },
     },
   };
@@ -168,11 +168,36 @@ function DashboardPage({ onLogout }) {
             <p className="sidebar-subtitle">Coopsket Admin(IT)</p>
           </div>
           <nav className="menu">
-            <button className="menu-item active">대시보드</button>
-            <button className="menu-item">재고 관리</button>
-            <button className="menu-item">수요 예측</button>
-            <button className="menu-item">발주 추천</button>
-            <button className="menu-item">설정</button>
+            <button
+              className={`menu-item ${activePage === "dashboard" ? "active" : ""}`}
+              onClick={() => setActivePage("dashboard")}
+            >
+              대시보드
+            </button>
+            <button
+              className={`menu-item ${activePage === "inventory" ? "active" : ""}`}
+              onClick={() => setActivePage("inventory")}
+            >
+              재고 관리
+            </button>
+            <button
+              className={`menu-item ${activePage === "forecast" ? "active" : ""}`}
+              onClick={() => setActivePage("forecast")}
+            >
+              수요 예측
+            </button>
+            <button
+              className={`menu-item ${activePage === "order" ? "active" : ""}`}
+              onClick={() => setActivePage("order")}
+            >
+              발주 추천
+            </button>
+            <button
+              className={`menu-item ${activePage === "settings" ? "active" : ""}`}
+              onClick={() => setActivePage("settings")}
+            >
+              설정
+            </button>
           </nav>
         </div>
         <button className="logout-btn" onClick={onLogout}>
@@ -188,88 +213,125 @@ function DashboardPage({ onLogout }) {
           </div>
         </header>
 
-        <section className="content-grid">
-          {/* 재고 현황 */}
+        {/* 재고 관리 탭 */}
+        {activePage === "inventory" && (
           <div className="panel">
             <div className="panel-header">
               <div className="panel-title">
                 <span className="panel-icon">📦</span>
-                <h2>재고 현황</h2>
-              </div>
-              {lowStockCount > 0 && (
-                <span className="badge danger">⚠️ 부족 {lowStockCount}건</span>
-              )}
-            </div>
-            <div className="chart-box">
-              <Bar data={inventoryChartData} options={inventoryChartOptions} />
-            </div>
-          </div>
-
-          {/* AI 수요 예측 리포트 */}
-          <div className="panel">
-            <div className="panel-header">
-              <div className="panel-title">
-                <span className="panel-icon">📈</span>
-                <h2>AI 예측 수요 리포트</h2>
-              </div>
-              <span className="accuracy-badge">AI 예측 정확도 ✅ 87.3%</span>
-            </div>
-            <div className="chart-box">
-              <Bar data={forecastChartData} options={forecastChartOptions} />
-            </div>
-          </div>
-
-          {/* AI 발주 추천 */}
-          <div className="panel">
-            <div className="panel-header">
-              <div className="panel-title">
-                <span className="panel-icon">🛒</span>
-                <h2>AI 발주 추천</h2>
+                <h2>재고 관리</h2>
               </div>
             </div>
-            <p className="panel-desc">곧 발주하면 품절을 막을 수 있어요</p>
-            <div className="order-list">
-              {orderList.map((item) => (
-                <div key={item.name} className="order-item">
-                  <div className="order-top">
+            <ul className="item-list">
+              {inventoryList.map((item) => (
+                <li key={item.name}>
+                  <div>
                     <strong>{item.name}</strong>
-                    <span className="order-qty">
-                      현재 {item.current} / {item.recommended}개 권장
-                    </span>
+                    <p>
+                      현재 재고 {item.stock}개 / 적정 재고 {item.target}개
+                    </p>
                   </div>
-                  <div className="progress-bar">
-                    <div
-                      className="progress-fill"
-                      style={{
-                        width: `${Math.min((item.current / item.recommended) * 100, 100)}%`,
-                      }}
-                    />
-                  </div>
-                  <p className="order-reason">⚡ {item.reason}</p>
-                </div>
+                  <span
+                    className={`badge ${item.stock < item.target ? "danger" : "normal"}`}
+                  >
+                    {item.stock < item.target ? "부족" : "정상"}
+                  </span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
+        )}
 
-          {/* 오늘의 인사이트 */}
-          <div className="panel">
-            <div className="panel-header">
-              <div className="panel-title">
-                <span className="panel-icon">💡</span>
-                <h2>오늘의 인사이트</h2>
+        {/* 대시보드 탭 */}
+        {activePage === "dashboard" && (
+          <section className="content-grid">
+            {/* 재고 현황 */}
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">
+                  <span className="panel-icon">📦</span>
+                  <h2>재고 현황</h2>
+                </div>
+                {lowStockCount > 0 && (
+                  <span className="badge danger">
+                    ⚠️ 부족 {lowStockCount}건
+                  </span>
+                )}
+              </div>
+              <div className="chart-box">
+                <Bar
+                  data={inventoryChartData}
+                  options={inventoryChartOptions}
+                />
               </div>
             </div>
-            <div className="insight-grid">
-              {insights.map((item) => (
-                <div key={item.title} className={`insight-card ${item.type}`}>
-                  <span className="insight-icon">{item.icon}</span>
-                  <strong>{item.title}</strong>
-                  <p>{item.desc}</p>
+
+            {/* AI 수요 예측 리포트 */}
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">
+                  <span className="panel-icon">📈</span>
+                  <h2>AI 예측 수요 리포트</h2>
                 </div>
-              ))}
+                <span className="accuracy-badge">AI 예측 정확도 ✅ 87.3%</span>
+              </div>
+              <div className="chart-box">
+                <Bar data={forecastChartData} options={forecastChartOptions} />
+              </div>
             </div>
-          </div>
-        </section>
+
+            {/* AI 발주 추천 */}
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">
+                  <span className="panel-icon">🛒</span>
+                  <h2>AI 발주 추천</h2>
+                </div>
+              </div>
+              <p className="panel-desc">곧 발주하면 품절을 막을 수 있어요</p>
+              <div className="order-list">
+                {orderList.map((item) => (
+                  <div key={item.name} className="order-item">
+                    <div className="order-top">
+                      <strong>{item.name}</strong>
+                      <span className="order-qty">
+                        현재 {item.current} / {item.recommended}개 권장
+                      </span>
+                    </div>
+                    <div className="progress-bar">
+                      <div
+                        className="progress-fill"
+                        style={{
+                          width: `${Math.min((item.current / item.recommended) * 100, 100)}%`,
+                        }}
+                      />
+                    </div>
+                    <p className="order-reason">⚡ {item.reason}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 오늘의 인사이트 */}
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">
+                  <span className="panel-icon">💡</span>
+                  <h2>오늘의 인사이트</h2>
+                </div>
+              </div>
+              <div className="insight-grid">
+                {insights.map((item) => (
+                  <div key={item.title} className={`insight-card ${item.type}`}>
+                    <span className="insight-icon">{item.icon}</span>
+                    <strong>{item.title}</strong>
+                    <p>{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );
